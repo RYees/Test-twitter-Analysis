@@ -1,10 +1,15 @@
 import json
 import pandas as pd
 from textblob import TextBlob
-# import zipfile
+# from wordcloud import WordCloud
+import numpy as np
+import re
+import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+import zipfile
 
-# with zipfile.ZipFile("./Data/Economic_Twitter_Data.zip", "r") as zip_ref:
-#     zip_ref.extractall("./Data")
+with zipfile.ZipFile("./Data/Economic_Twitter_Data.zip", "r") as zip_ref:
+    zip_ref.extractall("./Data")
     
     
 def read_json(json_file: str) -> list:
@@ -41,8 +46,15 @@ class TweetDfExtractor:
         self.tweets_list = tweets_list
 
     # an example function
+    def find_statuses_count(self) -> list:
+        statuses_count = [x.get("statuses_count") for x in tweet_list["user"]]
+        for statuses_count in statuses_count:
+            return statuses_count
+        
     def find_created_time(self) -> list:
-        return self.tweets_list["created_at"]
+        created_at = [x.get("created_at") for x in tweet_list["user"]]
+        for created_at in created_at:
+            return created_at
     
     def find_full_text(self) -> list:
         for i in self.tweets_list["text"]:
@@ -52,9 +64,32 @@ class TweetDfExtractor:
     def find_source(self) -> list:
         return self.tweets_list["source"]
 
-    def find_sentiments(self, text) -> list:
+    def find_sentiments(self) -> list:
+        newText = []
+        for tweet in self.tweets_list["text"]:
+#             print(tweet)
+            text = re.sub(r'@[A-Za-z0-0]+', ' ', tweet)
+            text = re.sub(r'#', '', text)
+            text = re.sub(r':', '', text)
+            text = re.sub(r'_', '', text)
+            text = re.sub(r'RT[\s]+', ' ', text)
+            text = re.sub(r'https:\/\/\S+', ' ', text)
+            newText.append(text)
+            print(newText)
 
-        return self.tweets_list[['polarity', 'subjectivity']]
+        for i in text:
+            polarity = TextBlob(i).sentiment.polarity
+            subjectivity = TextBlob(i).sentiment.subjectivity
+            #print(subjectivity)
+#             print('next')
+#             print(polarity)
+            #print(i)
+        print(type(text))
+        
+        
+#     print(text)
+
+#         return self.tweets_list[['polarity', 'subjectivity']]
     
     def find_lang(self) -> list:
         return self.tweets_list["lang"]
@@ -71,22 +106,26 @@ class TweetDfExtractor:
     def find_screen_name(self) -> str:
         for myList in mention:
             for item in myList:
-                return item.get("screen_name")    
+                print(item.get("screen_name")  )   
     
-
     def find_followers_count(self) -> list:
         followers_count = [x.get("followers_count") for x in tweet_list["user"]]
-        return followers_count 
+        for followers_count in followers_count:
+            return followers_count
+#             print(followers_count)
+            
         
 
     def find_friends_count(self) -> list:
         friends_count = [x.get("friends_count") for x in tweet_list["user"]]
-        return friends_count  
+        for friends_count in friends_count:
+            return friends_count
+#             print(followers_count)
         
 
     def is_sensitive(self) -> list:
         try:
-            is_sensitive = [x['possibly_sensitive'] for x in self.tweets_list]
+            is_sensitive = self.tweets_list['possibly_sensitive']
         except KeyError:
             is_sensitive = None
 
@@ -101,8 +140,10 @@ class TweetDfExtractor:
 
     def find_mentions(self) -> list:
         mentions = [x.get("user_mentions") for x in tweet_list["entities"]]
+        for mention in mentions:
+            print(mention)
 #         mentions
-        return mentions
+#         return mentions
 
 
     def find_location(self) -> list:
@@ -148,19 +189,11 @@ class TweetDfExtractor:
 
 if __name__ == "__main__":
     # required column to be generated you should be creative and add more features
-    _, tweet_list2 = read_json("")
-    tweet_list = pd.DataFrame(tweet_list2).head(5)
-    print(tweet_list["id"])
+    _, tweet_list2 = read_json("./data/Economic_Twitter_Data.json")
+    tweet_list = pd.DataFrame(tweet_list2)
     tweet = TweetDfExtractor(tweet_list)
-#     tweet.find_full_text()
+    tweet.find_sentiments()
 #     tweet_df = tweet.get_tweet_df()
-    location = [x.get("friends_count") for x in tweet_list["user"]]
-#     mention = [x.get("user_mentions") for x in tweet_list["entities"]]
-#     screen_names = [screen_name["screen_name"] for screen_name in mention]
-    print(location)
-    print("ext")
-#     print(mention)
+
+
     
-#     for myList in mention:
-#         for item in myList:
-#             print(item)
