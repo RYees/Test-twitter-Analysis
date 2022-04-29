@@ -28,7 +28,7 @@ def read_json(json_file: str) -> list:
     for tweets in open(json_file, 'r'):
         tweets_data.append(json.loads(tweets))
 
-    return len(tweets_data), tweets_data
+    return len(tweets_data), tweets_dat
 
 
 
