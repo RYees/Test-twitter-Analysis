@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from textblob import TextBlob
-
+import re
 def read_json(json_file: str)->list:
     """
     json file reader to open and read json files into a list
@@ -14,12 +14,10 @@ def read_json(json_file: str)->list:
     length of the json file and a list of json
     """
     
-    tweets_data = []
-    for tweets in open(json_file,'r'):
-        tweets_data.append(json.loads(tweets))
+    tweets_data=pd.read_json(json_file,lines=True)
     
     
-    return len(tweets_data), tweets_data
+    return  tweets_data
 
 class TweetDfExtractor:
     """
@@ -54,9 +52,9 @@ class TweetDfExtractor:
        
     def find_sentiments(self)->list:
                 
-            
+        tweets = pd.DataFrame(self.tweets_list)
         newText = []
-        for tweet in self.tweets_list["text"]:
+        for tweet in tweets["text"]:
 
             text = re.sub(r'@[A-Za-z0-0]+', ' ', tweet)
             text = re.sub(r'#', '', text)
@@ -70,13 +68,13 @@ class TweetDfExtractor:
             subjectivity=[]
 
         for i in newText:
-            polarity = TextBlob(i).sentiment.polarity
+            polarity_txt = TextBlob(i).sentiment.polarity
                         
-            sentiment.append(polarity)
+            polarity.append(polarity_txt)
 
-            subjectivity = TextBlob(i).sentiment.subjectivity
+            subjectivity_txt = TextBlob(i).sentiment.subjectivity
             
-            sentiment.append(subjectivity)
+            subjectivity.append(subjectivity)
 
             return  pd.DataFrame(polarity), pd.DataFrame(subjectivity)
 
@@ -165,7 +163,7 @@ class TweetDfExtractor:
 
         return tweets['user'].get("location")
     
-    def find_location(self)->list:
+    def find_lang(self)->list:
     
         tweets = pd.DataFrame(self.tweets_list)
         
@@ -180,7 +178,7 @@ class TweetDfExtractor:
         created_at = self.find_created_time()
         source = self.find_source()
         text = self.find_full_text()
-        polarity, subjectivity = self.find_sentiments(text)
+        polarity, subjectivity = self.find_sentiments()
         lang = self.find_lang()
         fav_count = self.find_favourite_count()
         retweet_count = self.find_retweet_count()
@@ -193,7 +191,6 @@ class TweetDfExtractor:
         location = self.find_location()
         data = zip(created_at, source, text, polarity, subjectivity, lang, fav_count, retweet_count, screen_name, follower_count, friends_count, sensitivity, hashtags, mentions, location)
         df = pd.DataFrame(data=data, columns=columns)
-
         if save:
             df.to_csv('processed_tweet_data.csv', index=False)
             print('File Successfully Saved.!!!')
@@ -206,9 +203,9 @@ if __name__ == "__main__":
     columns = ['created_at', 'source', 'text','clean_text', 'sentiment','polarity','subjectivity', 'lang', 'favorite_count', 'retweet_count', 
     'original_author', 'screen_count', 'followers_count','friends_count','possibly_sensitive', 'hashtags', 'user_mentions', 'place', 'place_coord_boundaries']
     tweet_list = read_json("data/Economic_Twitter_Data.json")
-    tweet_list =  zip(columns,tweet_list) 
+    #tweet_list =  zip(columns,tweet_list) 
 
-    tweet = TweetDfExtractor(tweet_list)
+    tweet = TweetDfExractor(tweet_list)
     tweet_df = tweet.get_tweet_df() 
 
     # use all defined functions to generate a dataframe with the specified columns above
